@@ -43,7 +43,7 @@ db.serialize(() => {
 
 class users {
   static getUser(account, cb) {
-    db.all(`SELECT * FROM users WHERE users.account = ?`, account, cb);
+    db.all(`SELECT * FROM users WHERE account = ?`, account, cb);
   }
 
   static createUser(data, cb) {
@@ -369,3 +369,42 @@ class star {
 }
 
 module.exports.star = star;
+
+class comment {
+  static addComment(data, cb) {
+    const date = new Date();
+    db.run(
+      `
+    INSERT INTO comment("video_id", "user_id", "content", "time", "response_id") VALUES (?, ?, ?, ?, ?);
+    `,
+      data.video_id,
+      data.user_id,
+      data.content,
+      date.getTime(),
+      data.response_id,
+      cb
+    );
+  }
+
+  static delComment(data, cb) {
+    db.run(
+      `
+    DELETE FROM comment WHERE comment_id = ?;
+    `,
+      data.comment_id,
+      cb
+    );
+  }
+
+  static getCommentFromVideo(data, cb) {
+    db.all(
+      `
+    SELECT * FROM comment WHERE video_id = ? ORDER BY time DESC;
+    `,
+      data.video_id,
+      cb
+    );
+  }
+}
+
+module.exports.comment = comment;

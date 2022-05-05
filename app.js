@@ -7,6 +7,7 @@ const port = 8880;
 const usersDB = require("./db").users;
 const videoDB = require("./db").videos;
 const starDB = require("./db").star;
+const commentDB = require("./db").comment;
 
 const config = require("./SiteConfig.json");
 const req = require("express/lib/request");
@@ -35,6 +36,25 @@ videoDB.getAllVideo((err, data) => {
 });
 
 //Router
+app.post("/addComment", (req, res) => {
+  commentDB.addComment(req.body, (err, data) => {
+    if (err) console.log(err);
+    res.send({ status: 1, data: data });
+  });
+});
+
+app.post("/delComment", (req, res) => {
+  commentDB.delComment(req.body, (err, data) => {
+    res.send({ status: 1 });
+  });
+});
+
+app.post("/getCommentFromVideo", (req, res) => {
+  commentDB.getCommentFromVideo(req.body, (err, data) => {
+    res.send(data);
+  });
+});
+
 app.post("/getUserStar", (req, res) => {
   starDB.getUserStar(req.body, (err, data) => {
     res.send(data[0]);
