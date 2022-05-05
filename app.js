@@ -77,7 +77,10 @@ app.post("/playVideo", (req, res) => {
     } else {
       let date = new Date();
       videoDB.getPlayLog(req.body, (err, data) => {
-        if (data.length == 0 || date.getTime() - data[0].time > 3600000) {
+        if (
+          data.length == 0 ||
+          date.getTime() - data[0].time > config.playTimeCoolingTime
+        ) {
           videoDB.videoPlayTimesPlus(req.body.id, (err, data) => {
             videoDB.addPlayLog(req.body, (err, data) => {
               res.send({
@@ -94,7 +97,7 @@ app.post("/playVideo", (req, res) => {
 });
 
 app.get("/getHotVideos", (req, res) => {
-  videoDB.getMaxPlayVideoList(5, (err, data) => {
+  videoDB.getMaxPlayVideoList(config.homePageHotVideoNumber, (err, data) => {
     if (!err) {
       res.send(data);
     }

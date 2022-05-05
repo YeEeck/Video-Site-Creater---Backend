@@ -1,3 +1,7 @@
 {
-  "siteName": "测试视频网站"
+  "siteName": "Yeck的视频站（测试）",
+  "playTimeCoolingTime": 600000,
+  "@playTimeCoolingTime": "单位为毫秒。每个用户观看后对视频播放次数增加的冷却时间，默认为600000毫秒，即10分钟单个用户最多对单个视频增加一次播放计数。",
+  "homePageHotVideoNumber": 4,
+  "@homePageHotVideoNumber": "在主页显示的播放量最高的视频的数量，默认为4"
 }
