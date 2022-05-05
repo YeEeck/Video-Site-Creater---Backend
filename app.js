@@ -6,9 +6,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 const port = 8880;
 const usersDB = require("./db").users;
 const videoDB = require("./db").videos;
+const starDB = require("./db").star;
 
 const config = require("./SiteConfig.json");
 const req = require("express/lib/request");
+const res = require("express/lib/response");
 const siteName = config.siteName;
 
 // app.use("/video/415t46", express.static("E://STORE/Video/PrExport/123.mp4"));
@@ -24,6 +26,7 @@ app.all("*", function (req, res, next) {
 });
 
 //initStaticResource
+app.use("/image/0", express.static("img/default.png"));
 videoDB.getAllVideo((err, data) => {
   data.forEach((element) => {
     app.use("/video/" + element.id, express.static(element.dataUrl));
@@ -32,6 +35,99 @@ videoDB.getAllVideo((err, data) => {
 });
 
 //Router
+app.post("/getUserStar", (req, res) => {
+  starDB.getUserStar(req.body, (err, data) => {
+    res.send(data[0]);
+  });
+});
+
+app.post("/checkUserStar", (req, res) => {
+  if (req.body.account == undefined) {
+    res.send({ status: 444 });
+    return;
+  }
+  starDB.getUserStarList(req.body, (err, data) => {
+    starDB.checkStar(
+      { star_box_id: data[0].star_box_id, id: req.body.id },
+      (err, data) => {
+        if (data.length == 0) {
+          res.send({ status: 0 });
+        } else {
+          res.send({ status: 1 });
+        }
+      }
+    );
+  });
+});
+
+app.post("/delUserStarVideo", (req, res) => {
+  starDB.getUserStarList(req.body, (err, data) => {
+    starDB.delStarVideo(
+      { star_box_id: data[0].star_box_id, id: req.body.id },
+      (err, data) => {
+        res.send({ status: 1 });
+      }
+    );
+  });
+});
+
+app.post("/addUserStarVideo", (req, res) => {
+  starDB.getUserStarList(req.body, (err, data) => {
+    starDB.addStarVideo(
+      {
+        star_box_id: data[0].star_box_id,
+        id: req.body.id,
+      },
+      (err, data) => {
+        if (err) console.log(err);
+        res.send({ status: 1 });
+      }
+    );
+  });
+});
+
+app.post("/getStarVideoLength", (req, res) => {
+  starDB.getStarVideoLength(req.body, (err, data) => {
+    res.send({ length: data[0]["COUNT(*)"] });
+  });
+});
+
+app.post("/getStarListLength", (req, res) => {
+  starDB.getStarListLength(req.body, (err, data) => {
+    res.send({ length: data[0]["COUNT(*)"] });
+  });
+});
+
+app.post("/getStarList", (req, res) => {
+  starDB.getStarList(req.body, (err, data) => {
+    res.send(data);
+  });
+});
+
+app.post("/delStarVideo", (req, res) => {
+  starDB.delStarVideo(req.body, (err, data) => {
+    res.send(data);
+  });
+});
+
+app.post("/addStarVideo", (req, res) => {
+  starDB.addStarVideo(req.body, (err, data) => {
+    res.send(data);
+  });
+});
+
+app.post("/getStarVideo", (req, res) => {
+  starDB.getStarVideo(req.body, (err, data) => {
+    res.send(data);
+  });
+});
+
+app.post("/getStar", (req, res) => {
+  starDB.getStarInfo(req.body, (err, data) => {
+    res.send(data[0]);
+  });
+});
+
 app.post("/delLike", (req, res) => {
   videoDB.getlike(req.body, (err, data) => {
     if (data.length == 0) {
@@ -166,9 +262,20 @@ app.post("/reg", (req, res) => {
                     gender: req.body.gender,
                   },
                   (err, data) => {
-                    if (!err) {
-                      res.send(userData);
-                    }
+                    starDB.addStar(
+                      {
+                        star_box_name: "收藏夹",
+                        account: req.body.account,
+                        permissions: 1,
+                        description: "收藏夹",
+                        cover_image_id: 0,
+                      },
+                      (err, data) => {
+                        if (!err) {
+                          res.send(userData);
+                        }
+                      }
+                    );
                   }
                 );
               });

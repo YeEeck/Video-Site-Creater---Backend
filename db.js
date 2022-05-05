@@ -205,3 +205,167 @@ class videos {
 }
 
 module.exports.videos = videos;
+
+class star {
+  static checkStar(data, cb) {
+    db.all(
+      `SELECT * FROM star_box_video WHERE star_box_id = ? AND video_id = ?;`,
+      data.star_box_id,
+      data.id,
+      cb
+    );
+  }
+
+  static getUserStarList(data, cb) {
+    db.all(
+      `SELECT * FROM star_box_info WHERE user_id = ? ORDER BY time DESC`,
+      data.account,
+      cb
+    );
+  }
+
+  static getStarList(data, cb) {
+    db.all(
+      `SELECT * FROM star_box_info WHERE permissions = 0 ORDER BY time DESC LIMIT ? OFFSET ?;`,
+      data.limit,
+      data.offset,
+      cb
+    );
+  }
+
+  static getStarListLength(data, cb) {
+    db.all(`SELECT COUNT(*) FROM star_box_info WHERE permissions = 0;`, cb);
+  }
+
+  static addStar(data, cb) {
+    const date = new Date();
+    db.run(
+      `
+    INSERT INTO star_box_info(star_box_name, user_id, permissions, description, cover_image_id, time) VALUES(?,?,?,?,?,?);
+    `,
+      data.star_box_name,
+      data.account,
+      data.permissions,
+      data.description,
+      data.cover_image_id,
+      date.getTime(),
+      cb
+    );
+  }
+
+  static delStar(data, cb) {
+    db.run(
+      `
+    DELETE FROM star_box_info WHERE star_box_id = ?;
+    DELETE FROM star_box_video WHERE star_box_id = ?;
+    `,
+      data.star_box_id,
+      data.star_box_id,
+      cb
+    );
+  }
+
+  static getStarInfo(data, cb) {
+    db.all(
+      `
+    SELECT * FROM star_box_info WHERE star_box_id = ?;
+    `,
+      data.star_box_id,
+      cb
+    );
+  }
+
+  static getUserStar(data, cb) {
+    db.all(
+      `
+    SELECT * FROM star_box_info WHERE user_id = ?;
+    `,
+      data.account,
+      cb
+    );
+  }
+
+  static addStarVideo(data, cb) {
+    const date = new Date();
+    let data1 = data;
+    db.run(
+      `
+    INSERT INTO star_box_video(star_box_id, video_id, time) VALUES(?,?,?);
+    `,
+      data.star_box_id,
+      data.id,
+      date.getTime(),
+
+      (err, data) => {
+        db.run(
+          `
+        UPDATE videoInfos 
+        SET stars = stars + 1 
+        WHERE
+	      videoInfos.id = ?;
+        `,
+          data1.id,
+          (err, data) => {
+            db.run(
+              `UPDATE star_box_info SET time = ? WHERE star_box_id = ?;`,
+              date.getTime(),
+              data1.star_box_id,
+              cb
+            );
+          }
+        );
+      }
+    );
+  }
+
+  static delStarVideo(data, cb) {
+    let data1 = data;
+    db.run(
+      `DELETE FROM star_box_video WHERE star_box_id = ? AND video_id = ?;`,
+      data.star_box_id,
+      data.id,
+      (err, data) => {
+        db.run(
+          `UPDATE videoInfos 
+          SET stars = stars - 1 
+          WHERE
+	        videoInfos.id = ?;`,
+          data1.id,
+          cb
+        );
+      }
+    );
+  }
+
+  static getStarVideo(data, cb) {
+    db.all(
+      `
+    SELECT
+	    * 
+    FROM
+	    star_box_video
+	    JOIN videoInfos ON star_box_video.video_id = videoInfos.id 
+    WHERE
+	    star_box_id = ? 
+    ORDER BY
+	    star_box_video.time DESC,
+	    videoInfos.title ASC 
+	    LIMIT ? OFFSET ?;
+    `,
+      data.star_box_id,
+      data.limit,
+      data.offset,
+      cb
+    );
+  }
+
+  static getStarVideoLength(data, cb) {
+    db.all(
+      `SELECT COUNT(*) FROM star_box_video WHERE star_box_id = ?;`,
+      data.star_box_id,
+      cb
+    );
+  }
+}
+
+module.exports.star = star;
