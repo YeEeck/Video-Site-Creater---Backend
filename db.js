@@ -408,3 +408,15 @@ class comment {
 }
 
 module.exports.comment = comment;
+
+class search {
+  static searchVideoByTitle(data, cb) {
+    db.all(
+      `SELECT * FROM videoInfos WHERE title LIKE ? LIMIT 30`,
+      data.content,
+      cb
+    );
+  }
+}
+
+module.exports.search = search;

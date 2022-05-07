@@ -1,5 +1,12 @@
 const express = require("express");
 const app = express();
+
+var Segment = require("segment");
+var segment = new Segment();
+segment.useDefault();
+
+let _ = require("lodash");
+
 var bodyParser = require("body-parser");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -8,6 +15,7 @@ const usersDB = require("./db").users;
 const videoDB = require("./db").videos;
 const starDB = require("./db").star;
 const commentDB = require("./db").comment;
+const searchDB = require("./db").search;
 
 const config = require("./SiteConfig.json");
 const req = require("express/lib/request");
@@ -36,6 +44,47 @@ videoDB.getAllVideo((err, data) => {
 });
 
 //Router
+app.post("/search", (req, res) => {
+  let segmentData = segment.doSegment(req.body.content, { simple: true });
+  let requestContent = [];
+  let requestContentSub = [];
+  searchDB.searchVideoByTitle(
+    { content: "%" + segmentData.join("%") + "%" },
+    (err, data) => {
+      if (err) console.log(err);
+      requestContent = _.orderBy(
+        data,
+        ["playtimes", "time", "title"],
+        ["desc", "desc", "asc"]
+      );
+      if (req.body.complex) {
+        segmentData.forEach((element) => {
+          searchDB.searchVideoByTitle(
+            { content: "%" + element + "%" },
+            (err, data) => {
+              requestContentSub = _.unionWith(requestContent, data, _.isEqual);
+              if (element == segmentData[segmentData.length - 1]) {
+                requestContent = _.unionWith(
+                  requestContent,
+                  _.orderBy(
+                    requestContentSub,
+                    ["playtimes", "time", "title"],
+                    ["desc", "desc", "asc"]
+                  ),
+                  _.isEqual
+                );
+                res.send(requestContent);
+              }
+            }
+          );
+        });
+      } else {
+        res.send(requestContent);
+      }
+    }
+  );
+});
+
 app.post("/addComment", (req, res) => {
   commentDB.addComment(req.body, (err, data) => {
     if (err) console.log(err);
