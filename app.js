@@ -46,6 +46,7 @@ videoDB.getAllVideo((err, data) => {
 //Router
 app.post("/search", (req, res) => {
   let segmentData = segment.doSegment(req.body.content, { simple: true });
+  console.log(segmentData);
   let requestContent = [];
   let requestContentSub = [];
   searchDB.searchVideoByTitle(
@@ -59,10 +60,15 @@ app.post("/search", (req, res) => {
       );
       if (req.body.complex) {
         segmentData.forEach((element) => {
+          console.log(element);
           searchDB.searchVideoByTitle(
             { content: "%" + element + "%" },
             (err, data) => {
-              requestContentSub = _.unionWith(requestContent, data, _.isEqual);
+              requestContentSub = _.unionWith(
+                requestContentSub,
+                data,
+                _.isEqual
+              );
               if (element == segmentData[segmentData.length - 1]) {
                 requestContent = _.unionWith(
                   requestContent,
